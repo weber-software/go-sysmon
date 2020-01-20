@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/weber-software/go-sysmon.svg?branch=master)](https://travis-ci.org/weber-software/go-sysmon)
+
 # go-sysmon
 a minimal tool for writing system metrics to an influxdb - written in golang
 
