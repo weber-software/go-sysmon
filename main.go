@@ -4,6 +4,7 @@ import (
 	"go-sysmon/gatherer"
 	"log"
 	"os"
+	"strconv"
 )
 
 // /proc/meminfo
@@ -12,10 +13,8 @@ import (
 // /proc/uptime
 // /proc/loadavg
 
-func run(influx Influx, gatherers []gatherer.Gatherer) {
-	tag := "sys1"
-
-	for currentTime := range IntervalIterator(5 * 1000 * 1000 * 1000) {
+func run(influx Influx, gatherers []gatherer.Gatherer, interval int64, tag string) {
+	for currentTime := range IntervalIterator(interval * 1000 * 1000) {
 		total := 0
 		// log.Println(currentTime)
 		for _, g := range gatherers {
@@ -50,15 +49,30 @@ func main() {
 	loadavg := gatherer.LoadAvg{}
 	gatherers := []gatherer.Gatherer{&memInfo, &uptime, &vmstat, &loadavg}
 
-	tag := os.Getenv("SYSMON_TAG")
+	tag := os.Getenv("SYSMON_INFLUX_TAG")
 	if tag == "" {
-		log.Println("please provide env SYSMON_TAG")
+		log.Println("please provide env SYSMON_INFLUX_TAG")
+		os.Exit(1)
 		return
 	}
 	influxHost := os.Getenv("SYSMON_INFLUX_HOST")
 	if influxHost == "" {
 		log.Println("please provide env SYSMON_INFLUX_HOST")
+		os.Exit(1)
 		return
+	}
+
+	intervalMs := int64(5000)
+
+	intervalStr := os.Getenv("SYSMON_INTERVAL_MS")
+	if intervalStr != "" {
+		value, err := strconv.ParseInt(intervalStr, 10, 64)
+		if err != nil {
+			log.Printf("failed to parse interval: %v", err)
+			os.Exit(1)
+			return
+		}
+		intervalMs = value
 	}
 
 	influx := Influx{
@@ -67,6 +81,11 @@ func main() {
 		Db:   "go-sysmon",
 	}
 
-	log.Println(tag)
-	run(influx, gatherers)
+	influxDb := os.Getenv("SYSMON_INFLUX_DB")
+	if influxDb != "" {
+		influx.Db = influxDb
+	}
+
+	log.Printf("gathering system metrics all %vms and writing them to db \"%v\" on host \"%v\" with tag \"%v\"\n", intervalMs, influx.Db, influx.Host, tag)
+	run(influx, gatherers, intervalMs, tag)
 }
