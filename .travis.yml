@@ -1,0 +1,4 @@
+dist: xenial
+language: generic
+script:
+  - go build -gcflags=-trimpath=$(PWD) -ldflags "-s -w" .
