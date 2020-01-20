@@ -9,4 +9,9 @@ a minimal tool for writing system metrics to an influxdb - written in golang
 
 ## Usage
 
-`SYSMON_TAG=system1 SYSMON_INFLUX_HOST=192.168.1.60 ./go-sysmon`
+`SYSMON_INFLUX_TAG=system1 SYSMON_INFLUX_HOST=192.168.1.60 ./go-sysmon`
+
+## Docker
+
+`docker build -t go-sysmon .`
+`docker run -e SYSMON_INFLUX_TAG=sys1 -e SYSMON_INFLUX_HOST=192.168.1.60 -it --rm go-sysmon`
